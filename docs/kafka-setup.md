@@ -4,7 +4,7 @@
 
 Apache Kafka is used as the distributed event streaming platform in the Distributed Fraud Monitoring System.
 
-The transaction producer publishes payment events to Kafka. Downstream Spark Structured Streaming processes these events for fraud detection.
+VM1 is responsible for hosting the Kafka broker and running the transaction producer. The producer publishes transaction events to Kafka for downstream Spark Structured Streaming processing.
 
 ## 2. Environment
 
@@ -12,16 +12,18 @@ The transaction producer publishes payment events to Kafka. Downstream Spark Str
 - Java: OpenJDK 17
 - Apache Kafka: 4.4.0
 - Python: 3.12.3
-- Python Kafka Library: kafka-python
+- Python Kafka Library: kafka-python 3.0.13
 - Kafka Mode: KRaft
 - Kafka Port: 9092
+- Network: ZeroTier
 
 ## 3. Project Components
 
-- `producer/kafka_producer.py` – Publishes transaction events.
+- `producer/kafka_producer.py` – Publishes transaction events to Kafka.
 - `producer/inspect_dataset.py` – Inspects the transaction dataset.
-- `producer/verify_kafka.py` – Verifies Kafka messages.
+- `producer/verify_kafka.py` – Verifies published Kafka messages.
 - `producer/data/transactions.csv` – Input transaction dataset.
+- `experiments/generate_disorder.py` – Generates out-of-order transaction events.
 
 ## 4. Start Kafka Broker
 
@@ -31,27 +33,41 @@ Navigate to the Kafka installation directory:
 
 Start the broker:
 
-    bin/kafka-server-start.sh config/server.properties
+    export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+    nohup bin/kafka-server-start.sh config/server.properties > ~/kafka.log 2>&1 &
 
-Keep the broker terminal running.
+Check whether Kafka is running:
+
+    jps
+
+The Kafka process should appear in the output.
 
 ## 5. Kafka Topic Configuration
 
-Topic name: transactions-run1
+Three project topics were created.
 
-Configuration:
-- Partitions: 3
-- Replication factor: 1
+| Topic | Partitions | Replication Factor | Purpose |
+|---|---:|---:|---|
+| transactions-run1 | 3 | 1 | Baseline transaction stream |
+| transactions-under-1min | 1 | 1 | Out-of-order events with less than 1-minute delay |
+| transactions-over-1min | 1 | 1 | Out-of-order events with more than 1-minute delay |
 
-Describe the topic:
+List topics:
+
+    bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+
+Describe a topic:
 
     bin/kafka-topics.sh --describe --topic transactions-run1 --bootstrap-server localhost:9092
 
 ## 6. Python Environment
 
-Activate the project virtual environment:
+Navigate to the project directory:
 
     cd ~/distributed-fraud-monitoring
+
+Activate the virtual environment:
+
     source .venv/bin/activate
 
 Install dependencies:
@@ -77,7 +93,9 @@ Execute:
 
     python producer/kafka_producer.py
 
-The producer publishes all 2,000 records to the Kafka topic, preserving the original CSV order and duplicate records.
+The producer publishes all 2,000 transaction records to `transactions-run1`.
+
+The producer preserves the original CSV order and publishes duplicate records without removing them.
 
 ## 9. Kafka Message Verification
 
@@ -94,29 +112,96 @@ Verified results:
 
 Result: SUCCESS.
 
-## 10. Distributed Network Configuration
+## 10. Out-of-Order Event Experiments
 
-The project uses ZeroTier for communication between team members' machines.
+The script `experiments/generate_disorder.py` was used to publish transaction events in reverse event-time order.
+
+### Experiment 1: Out-of-order events under 1 minute
+
+Topic: `transactions-under-1min`
+
+Expected event-time difference: 47 seconds.
+
+Publication order:
+
+1. TXN0000004
+2. TXN0000003
+
+Kafka successfully published both messages. The consumer confirmed that the later event timestamp was received before the earlier event timestamp.
+
+### Experiment 2: Out-of-order events over 1 minute
+
+Topic: `transactions-over-1min`
+
+Expected event-time difference: 91 seconds.
+
+Publication order:
+
+1. TXN0000423
+2. TXN0000422
+
+Kafka successfully published both messages. The consumer confirmed that the later event timestamp was received before the earlier event timestamp.
+
+Note: These experiments verify Kafka publication order. Spark watermark acceptance and late-event handling must be validated separately through the Spark Structured Streaming application.
+
+## 11. Kafka Broker Recovery Test
+
+A broker recovery test was performed.
+
+Steps:
+
+1. Started the Kafka broker.
+2. Verified that the Kafka process was running.
+3. Stopped the broker process.
+4. Confirmed that the Kafka process had stopped.
+5. Restarted the Kafka broker.
+6. Verified that the Kafka process was running again.
+
+Result: Kafka successfully restarted.
+
+## 12. Data Persistence Verification
+
+After restarting Kafka, the following checks were performed:
+
+- Verified that all three project topics were still available.
+- Read the previously published messages from the out-of-order experiment topic.
+- Confirmed that the messages remained available after broker restart.
+
+Result: Topic and message persistence was successfully verified.
+
+## 13. Distributed Network Configuration
+
+The project uses ZeroTier for communication between team members' virtual machines.
 
 VM1 ZeroTier address:
 
     10.103.77.213
 
-The initial Kafka test uses localhost:9092.
+The initial Kafka tests were performed using:
 
-Remote Kafka connectivity through ZeroTier and advertised listener configuration are pending integration testing.
+    localhost:9092
 
-## 11. Current Status
+Remote Kafka connectivity through ZeroTier and advertised listener configuration remain pending integration testing.
 
-Completed:
-- Kafka installation and KRaft setup.
-- Kafka topic creation.
+## 14. Current Work Status
+
+### Completed
+
+- Kafka 4.4.0 installation and KRaft configuration.
+- Kafka broker startup and operation.
+- Creation of three project topics.
 - Transaction producer implementation.
 - Dataset inspection.
 - Publication of 2,000 transaction records.
-- Independent Kafka message verification.
+- Kafka message verification.
+- Out-of-order event publication under 1 minute.
+- Out-of-order event publication over 1 minute.
+- Kafka broker stop-and-restart recovery test.
+- Topic and message persistence verification.
 
-Pending:
-- Remote Kafka connectivity.
-- Spark Structured Streaming integration.
-- Distributed processing and fault-tolerance experiments.
+### Pending
+
+- Remote Kafka connectivity and integration with the Spark consumer.
+- Spark watermark behaviour validation by the Spark team.
+- Distributed processing and Spark fault-tolerance experiments.
+- Final screenshots and experiment evidence compilation.
