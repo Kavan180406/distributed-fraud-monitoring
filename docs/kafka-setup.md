@@ -183,25 +183,4 @@ The initial Kafka tests were performed using:
 
 Remote Kafka connectivity through ZeroTier and advertised listener configuration remain pending integration testing.
 
-## 14. Current Work Status
 
-### Completed
-
-- Kafka 4.4.0 installation and KRaft configuration.
-- Kafka broker startup and operation.
-- Creation of three project topics.
-- Transaction producer implementation.
-- Dataset inspection.
-- Publication of 2,000 transaction records.
-- Kafka message verification.
-- Out-of-order event publication under 1 minute.
-- Out-of-order event publication over 1 minute.
-- Kafka broker stop-and-restart recovery test.
-- Topic and message persistence verification.
-
-### Pending
-
-- Remote Kafka connectivity and integration with the Spark consumer.
-- Spark watermark behaviour validation by the Spark team.
-- Distributed processing and Spark fault-tolerance experiments.
-- Final screenshots and experiment evidence compilation.
