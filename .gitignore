@@ -19,3 +19,4 @@ spark-warehouse/
 # IDE
 .vscode/
 .idea/
+metastore_db/
