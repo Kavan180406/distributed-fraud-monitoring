@@ -1,0 +1,9 @@
+transaction_id,predicted_fraud
+TXN001,0
+TXN002,1
+TXN003,1
+TXN004,0
+TXN005,0
+TXN006,1
+TXN007,0
+TXN008,1

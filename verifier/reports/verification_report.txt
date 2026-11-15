@@ -1,0 +1,27 @@
+
+========================================
+       FRAUD VERIFICATION REPORT
+========================================
+
+Generated on: 2026-11-13 21:12:58
+
+Total Transactions: 8
+
+CONFUSION MATRIX
+----------------------------------------
+True Positives  : 3
+True Negatives  : 3
+False Positives : 1
+False Negatives : 1
+
+EVALUATION METRICS
+----------------------------------------
+Accuracy              : 75.00%
+Precision             : 75.00%
+Recall                : 75.00%
+F1 Score              : 75.00%
+False Positive Rate   : 25.00%
+
+========================================
+         VERIFICATION COMPLETED
+========================================

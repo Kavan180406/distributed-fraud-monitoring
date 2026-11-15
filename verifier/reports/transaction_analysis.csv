@@ -1,0 +1,9 @@
+transaction_id,actual,predicted,classification
+TXN001,0,0,TN
+TXN002,1,1,TP
+TXN003,0,1,FP
+TXN004,1,0,FN
+TXN005,0,0,TN
+TXN006,1,1,TP
+TXN007,0,0,TN
+TXN008,1,1,TP

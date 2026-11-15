@@ -1,0 +1,5 @@
+# VM3 Python dependencies
+# Apache Spark 3.3.4 and Hadoop 3.3.6 should be installed separately.
+# PySpark is provided by the local Spark installation.
+# Python standard-library modules (csv, os, sys, unittest, datetime)
+# do not require pip installation.
